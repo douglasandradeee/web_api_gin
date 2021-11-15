@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"fmt"
-	"log"
+	"net/http"
 	"strconv"
 
 	"github.com/douglasandradeee/web_api_gin/database"
@@ -18,21 +18,16 @@ func CreateBook(c *gin.Context) {
 	// Faz o parse da requisicao recebida no formato JSON para a struct/objeto.
 	err := c.ShouldBindJSON(&book)
 	if err != nil {
-		c.JSON(400, gin.H{
-			"error": "cannot bind JSON: " + err.Error(),
-		})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "cannot bind JSON: " + err.Error()})
 		return
 	}
 
 	err = db.Create(&book).Error
 	if err != nil {
-		c.JSON(400, gin.H{
-			"error": "cannot create book: " + err.Error(),
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "cannot create book: " + err.Error()})
 		return
 	}
-
-	c.JSON(201, book)
+	c.JSON(http.StatusCreated, book)
 }
 
 func FindBookByID(c *gin.Context) {
@@ -41,8 +36,8 @@ func FindBookByID(c *gin.Context) {
 	// Convertendo o ID de string para int.
 	newId, err := strconv.Atoi(id)
 	if err != nil {
-		fmt.Println("Erro ao converter Id")
-		log.Fatalln(err.Error())
+		fmt.Println("error - cannot convert id: " + err.Error())
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
@@ -51,12 +46,10 @@ func FindBookByID(c *gin.Context) {
 	var book models.Book
 	err = db.First(&book, newId).Error
 	if err != nil {
-		c.JSON(400, gin.H{
-			"error": "cannot find book: " + err.Error(),
-		})
+		c.JSON(http.StatusNotFound, gin.H{"error": "cannot find book: " + err.Error()})
 		return
 	}
-	c.JSON(200, book)
+	c.JSON(http.StatusOK, book)
 }
 
 func FindAllBooks(c *gin.Context) {
@@ -65,14 +58,11 @@ func FindAllBooks(c *gin.Context) {
 	var books []models.Book
 	err := db.Find(&books).Error
 	if err != nil {
-		c.JSON(400, gin.H{
-			"error": "cannot find results: " + err.Error(),
-		})
+		c.JSON(http.StatusNotFound, gin.H{"error": "cannot find results: " + err.Error()})
 		return
 	}
 
-	c.JSON(200, books)
-
+	c.JSON(http.StatusOK, books)
 }
 
 func UpdadeBook(c *gin.Context) {
@@ -82,22 +72,18 @@ func UpdadeBook(c *gin.Context) {
 	// Faz o parse da requisicao recebida no formato JSON para a struct/objeto.
 	err := c.ShouldBindJSON(&book)
 	if err != nil {
-		c.JSON(400, gin.H{
-			"error": "cannot bind JSON: " + err.Error(),
-		})
+		fmt.Println("error - cannot bind JSON: " + err.Error())
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
 	err = db.Save(book).Error
 	if err != nil {
-		c.JSON(400, gin.H{
-			"error": "cannot update book: " + err.Error(),
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "cannot update book: " + err.Error()})
 		return
 	}
 
-	c.JSON(200, book)
-
+	c.JSON(http.StatusOK, book)
 }
 
 func DeleteBookByID(c *gin.Context) {
@@ -106,8 +92,8 @@ func DeleteBookByID(c *gin.Context) {
 	// Convertendo o ID de string para Uint.
 	newId, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
-		fmt.Println("Erro ao converter Id")
-		log.Fatalln(err.Error())
+		fmt.Println("error - cannot convert id: " + err.Error())
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
@@ -115,12 +101,8 @@ func DeleteBookByID(c *gin.Context) {
 
 	err = db.Delete(&models.Book{}, newId).Error
 	if err != nil {
-		c.JSON(400, gin.H{
-			"error": "cannot delete book: " + err.Error(),
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "cannot delete book: " + err.Error()})
 		return
 	}
-	c.JSON(204, gin.H{
-		"sucess": "livro deletado com sucesso",
-	})
+	c.JSON(http.StatusNoContent, gin.H{"sucess": "livro deletado com sucesso"})
 }
