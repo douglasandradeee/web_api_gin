@@ -1,0 +1,23 @@
+version: "3.7"
+
+services:
+  db:
+    build:
+      context: .
+      dockerfile: .dockerfile
+    image: github.com/douglasandradeee/web_clearapi_api_gin
+    container_name: web_api_gin
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "25432:5432"
+    environment:
+      POSTGRES_DB: books
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 123456
+      PGDATA: /var/lib/postgresql/data/web_api_gin
+    volumes:
+      - web_api_gin:/var/lib/postgresql/data
+
+volumes:
+  web_api_gin:
